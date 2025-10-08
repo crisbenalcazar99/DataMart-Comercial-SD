@@ -12,7 +12,7 @@ DB_CONFIG_FENIX = get_db_config("FENIX")
 
 
 # Engine y session para la base principal
-print(build_connection_url(DB_CONFIG_LOCAL))
+
 engine = create_engine(build_connection_url(DB_CONFIG_LOCAL))
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

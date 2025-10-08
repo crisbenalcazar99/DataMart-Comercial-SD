@@ -7,7 +7,7 @@ def build_connection_url(config):
     host = config['host']
     port = config['port']
     db = config.get('database', '')
-    print(config)
+
 
     if not engine or not driver:
         raise ValueError("Faltan parámetros obligatorios: 'engine' o 'driver'")

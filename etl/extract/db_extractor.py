@@ -4,7 +4,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sqlalchemy import create_engine, text
 import pandas as pd
 from common.session_manager import get_session
-
+import logging
 
 class DatabaseExtractor(BaseEstimator, TransformerMixin):
 
@@ -12,6 +12,7 @@ class DatabaseExtractor(BaseEstimator, TransformerMixin):
         self.query = query
         self.db_alias = db_alias
         self.params = params
+        self.log = logging.getLogger(__name__)
 
     def fit(self, X=None, y=None):
         return self
@@ -21,7 +22,7 @@ class DatabaseExtractor(BaseEstimator, TransformerMixin):
             raise ValueError("Query must be provided for transformation.")
 
         try:
-            print(f"parametros: {self.params}")
+
             stmt = text(self.query)
             with get_session(self.db_alias) as session:
                 df = pd.read_sql(stmt, session.bind, params=self.params)

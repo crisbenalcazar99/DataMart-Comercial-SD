@@ -1,6 +1,8 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 from common.session_manager import get_session
 import pandas as pd
+import logging
+from config.logger_config import setup_logger
 
 
 class DWLoader(BaseEstimator, TransformerMixin):
@@ -21,7 +23,6 @@ class DWLoader(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: pd.DataFrame):
-        print('Inicio Proceso de Carga al DataWarehouse')
         if not isinstance(X, pd.DataFrame):
             raise ValueError("El input de DWLoader debe ser un DataFrame de pandas.")
 

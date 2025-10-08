@@ -83,12 +83,11 @@ class DtypeIntegerTransform(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        print('Inicio Proceso de Transformacion Enteros')
+
         if not isinstance(X, pd.DataFrame):
             raise ValueError("Input must be a pandas DataFrame.")
         for col in self.columns:
             X[col] = X[col].astype(dtype=self.dtype_int)
-        print('Finalizo Proceso de Transformacion Enteros')
 
         return X
 
@@ -106,7 +105,6 @@ class DtypeStringTransform(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        X.info()
         if not isinstance(X, pd.DataFrame):
             raise ValueError("Input must be a pandas DataFrame.")
 

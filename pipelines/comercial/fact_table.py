@@ -6,6 +6,7 @@ from sklearn.pipeline import Pipeline
 from sqlalchemy import and_
 
 from common.session_manager import get_session
+from config.logging_pipeline import LoggingPipeline
 from etl.extract.db_extractor import DatabaseExtractor
 from etl.load.db_load_test import DWLoader
 from models.Comercial.articulos_entity import ArticulosEntity
@@ -20,9 +21,12 @@ from etl.transform.general_functions import RenameColumnsTransform, DropDuplicat
 from etl.transform.comercial_functions import IdentificarVendedorComentario, FacturaPagadaTransform, \
     IdentificarVendedorReasignaciones, DeleteVendedorNoComercial, CalculoSubtotalAbonado, FetchClientIdTransform, \
     FetchArticuloIdTransform, apply_filter_to_query
+import logging
 
 
 class FactTable:
+    logger = logging.getLogger(__name__)
+
     columns_str = [
         'numfac',
         'numdoc',
@@ -86,11 +90,12 @@ class FactTable:
 
     @classmethod
     def load_transaccciones_facturas(cls):
-        query_path_otros_productos = r"C:\Users\cbenalcazar\Downloads\DataWarehouseSD\Consultas SQL\facturas_acticulos_fenix.sql"
-        query_path_firmas_sf = r"C:\Users\cbenalcazar\Downloads\DataWarehouseSD\Consultas SQL\facturas_acticulos_fenix_firmas.sql"
+        cls.logger.info("Inicio del proceso de cagra de oinformacion test ")
+        query_name_otros_productos = "facturas_acticulos_fenix.sql"
+        query_name_firmas_sf = "facturas_acticulos_fenix_firmas.sql"
 
         df_firmas_sf = cls.extract_data(
-            query_path=query_path_firmas_sf,
+            query_name=query_name_firmas_sf,
             where_func=lambda p: p.filter(
                 and_(
                     ArticulosEntity.producto.in_([32, 35]),
@@ -100,7 +105,7 @@ class FactTable:
             )
         )
         df_otro_productos = cls.extract_data(
-            query_path=query_path_otros_productos,
+            query_name=query_name_otros_productos,
             where_func=lambda q: q.filter(
                 and_(
                     ArticulosEntity.producto.notin_([32, 35]),
@@ -119,8 +124,7 @@ class FactTable:
         cls.load_transacciones(df)
 
     @classmethod
-    def extract_data(cls, query_path, where_func=None):
-
+    def extract_data(cls, query_name, where_func=None):
         with get_session("LOCAL") as session:
             tuple_codart_filter = ArticulosEntity.get_list_codigos_articulos(
                 session=session,
@@ -133,14 +137,14 @@ class FactTable:
                 session=session
             )
 
-        query = load_sql_statement(query_path)
+        query = load_sql_statement(query_name)
         query, params = apply_filter_to_query(query=query,
                                               tx_date=max_transaction_date,
                                               pay_date=max_payment_date,
                                               tuple_codart=tuple_codart_filter
                                               )
 
-        pipeline = Pipeline([
+        pipeline = LoggingPipeline([
             ('extractor database', DatabaseExtractor(db_alias='FENIX', query=query, params=params)),
             ('transform dtypes string', DtypeStringTransform(cls.columns_str)),
             ('transform dtypes float', DtypeFloatTransform(cls.columns_float)),
@@ -153,10 +157,9 @@ class FactTable:
 
     @classmethod
     def load_facturas(cls, df_original):
-        df_original.info()
         df_facturas = df_original[cls.columns_dim_facturas].copy()
 
-        pipeline = Pipeline([
+        pipeline = LoggingPipeline([
             ('Rename Columns df', RenameColumnsTransform(
                 dict_names={'id_factura': 'id', 'subtotal_factura': 'subtotal', 'total_factura': 'total'})),
             ('Drop Duplicates Facturas id', DropDuplicatesTransform(subset=['id'])),
@@ -164,14 +167,14 @@ class FactTable:
             ('Calcular Subtotal Abonado', CalculoSubtotalAbonado('total_abonado', 'iva')),
             ('Carga la info en la DataBase',
              DWLoader(db_alias="LOCAL", model_class=FacturasEntity, conflict_cols=["numfac"], mode="UPDATE"))
-        ])
+        ], pipeline_name="Carga de Facturas")
         pipeline.fit_transform(df_facturas)
 
     @classmethod
     def load_transacciones(cls, df_original):
         df_transacciones = df_original[cls.columns_fact_transacciones].copy()
 
-        pipeline = Pipeline([
+        pipeline = LoggingPipeline([
             ('Rename Coluns ds', RenameColumnsTransform(dict_names={'id_tranfac': 'id'})),
             ('Establecer el id de vendedor en caso que el mismo factura', DeleteVendedorNoComercial('id_vendedor')),
             ('Identificar vendedor por Comen3', IdentificarVendedorComentario('comen3')),
@@ -183,5 +186,4 @@ class FactTable:
             ('Carga la info en la Database',
              DWLoader(db_alias="LOCAL", model_class=TransaccionesEntity, conflict_cols=["id"], mode="UPDATE"))
         ])
-        df_transacciones.info()
         pipeline.transform(df_transacciones)

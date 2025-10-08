@@ -14,9 +14,9 @@ from models.Comercial.articulos_entity import ArticulosEntity
 from common.session_manager import get_session
 
 def ejecutar_pipeline():
-    query_path = ''
+    query_name = ''
 
-    query = load_sql_statement(query_path)
+    query = load_sql_statement(query_name)
 
     columns_str = [
         'ruc',
@@ -39,7 +39,8 @@ def ejecutar_pipeline():
     ])
 
 def preload_reasignaciones():
-    df_reasignaciones = pd.read_excel(r"C:\Users\cbenalcazar\Downloads\DataWarehouseSD\archivos\reasignaciones_precarga.xlsx", dtype={
+    path_excel_file = et_proyect_root() / "archivos" / "reasignaciones_precarga.xlsx"
+    df_reasignaciones = pd.read_excel(path_excel_file, dtype={
         'ruc': 'string'
     })
     for index, row in df_reasignaciones.iterrows():

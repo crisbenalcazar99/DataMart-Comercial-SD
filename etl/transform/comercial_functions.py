@@ -29,7 +29,6 @@ class IdentificarVendedorComentario(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X=pd.DataFrame()):
-        print('Identificar Vendedores Comentario')
         X['cod_vendedor'] = X[self.column].str.extract(r'(\d{3})').astype('Int64')
         list_cod_vendedor = X['cod_vendedor'].dropna().unique().tolist()
         df_vendedores = request_vendedores_db(list_cod_vendedor)
@@ -46,7 +45,6 @@ class IdentificarVendedorComentario(BaseEstimator, TransformerMixin):
         X.loc[X['id_vendedor_from_db'].notna(), 'id_vendedor'] = X['id_vendedor_from_db']
         X.drop(columns=['cod_vendedor', 'comen3', 'id_vendedor_from_db'], inplace=True)
         X['id_vendedor'] = X['id_vendedor'].astype('Int64')
-        print(X.info())
         return X
 
 
@@ -63,8 +61,6 @@ class IdentificarVendedorReasignaciones(BaseEstimator, TransformerMixin):
     def transform(self, X=pd.DataFrame()):
         X_temp = X.copy()
         X_temp = X_temp[X_temp[self.column_id_vendedor].isna()]
-        print("VALIAR EN ESTE MOMENTP")
-        X.info()
         with get_session("LOCAL") as session:
             for index, row in X_temp.iterrows():
                 id_vendedor = ReasignacionesEntity.get_vendedor_id(
@@ -78,7 +74,6 @@ class IdentificarVendedorReasignaciones(BaseEstimator, TransformerMixin):
                 )
                 X.at[index, 'id_vendedor'] = id_vendedor
         X.drop(columns=['fecha_emision'], inplace=True)
-        print(X.info())
         return X
 
 
@@ -91,13 +86,11 @@ class DeleteVendedorNoComercial(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X=pd.DataFrame()):
-        X.info()
         id_vendedores_comercial = [414, 458, 483, 487, 519, 527, 936, 941, 946, 951, 956, 294]
         X[self.column_id_vendedor] = X[self.column_id_vendedor].where(
             X[self.column_id_vendedor].isin(id_vendedores_comercial),
             None
         )
-        print(X.info())
         return X
 
 

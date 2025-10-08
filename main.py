@@ -12,6 +12,9 @@ from pipelines.comercial.fact_table import FactTable
 from pipelines.comercial import dim_clientes
 from pipelines.comercial import dim_vendedores
 from pipelines.comercial import dim_reasignaciones
+from utils.general_functions import get_proyect_root, load_sql_statement
+from config.logger_config import setup_logger
+import logging
 
 
 def create_all_tables():
@@ -24,5 +27,7 @@ def create_all_tables():
 #FactTable.load_transaccciones_facturas()
 
 if __name__ == "__main__":
+    setup_logger()
+    log = logging.getLogger(__name__)
+    log.info("Inicio Proceso Datamart Comercial BY ZALY-CB")
     FactTable.load_transaccciones_facturas()
-
