@@ -1,0 +1,2 @@
+def operatividad():
+    return None
