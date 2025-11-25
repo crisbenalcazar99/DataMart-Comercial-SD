@@ -54,8 +54,11 @@ class TransactionHistoryPipelineConfig:
     # Configuración del loader
     db_alias: str = "QUANTA"
     model_class: Type = FactTransaccionesOperatividadEntity
-    mode: str = "IGNORE"  # INSERT | IGNORE | UPDATE
+    mode: str = "UPDATE"  # INSERT | IGNORE | UPDATE
     conflict_cols: tuple[str] = ("serial_firma",)
+    update_columns_conflict: tuple[str] = ('producto', 'medio', 'vigencia', 'tipo_firma', 'serial_firma',
+                                           'estado_firma', 'fecha_aprobacion', 'fecha_caducidad', 'fecha_emision',
+                                           'operador_creacion', 'link_renovacion', 'id_tramite', 'id_user', 'id_ruc')
 
     # Nombre legible para logs
     pipeline_name: str = "Pipeline Histórico Transacciones → DW"
@@ -104,7 +107,8 @@ class TransactionHistoryPipeline:
                     mode=self.config.mode,
                     conflict_cols=list(self.config.conflict_cols),
                     batch_size=2500,
-                    commit_per_batch=True
+                    commit_per_batch=True,
+                    update_cols=self.config.update_columns_conflict
                 )
             ),
         ]

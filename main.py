@@ -13,8 +13,8 @@ from datawarehouse.models.base import Base
 # from pipelines.comercial.fact_table import FactTable
 
 
-from datawarehouse.pipelines.Zoho.dim_usuarios_pipeline import RucsPipeline
-from datawarehouse.pipelines.Zoho.dim_rucs_pipeline import UsersPipeline
+from datawarehouse.pipelines.Zoho.dim_rucs_pipeline import RucsPipeline
+from datawarehouse.pipelines.Zoho.dim_users_pipeline import UsersPipeline
 from datawarehouse.pipelines.Zoho.fact_servicios_activos_pipeline import CurrentProductsPipeline
 from datawarehouse.pipelines.Zoho.fact_transacciones_operatividad_pipeline import TransactionHistoryPipeline
 from datawarehouse.pipelines.Zoho.staging_integrador_pipeline import StagingIntegradorOperatividad

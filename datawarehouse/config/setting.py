@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def get_db_config(prefix: str = "DB"):
-    env_path = Path(__file__).resolve().parent.parent.parent / '.venv'
+    env_path = Path(__file__).resolve().parent.parent / '.venv'
     env = dotenv_values(env_path)
 
     # 3) Lee desde el dict

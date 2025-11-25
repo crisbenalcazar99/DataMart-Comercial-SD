@@ -110,7 +110,7 @@ class StagingIntegradorOperatividad:
         df = cls._integration_pipeline().fit_transform(frames)
         # df = df[df['fecha_nacimiento'].notna()]
         return df
-        #return df
+
 
     # --------------------------
     # Helpers de construcción

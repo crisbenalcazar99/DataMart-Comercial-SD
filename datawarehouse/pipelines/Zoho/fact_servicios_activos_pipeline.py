@@ -21,10 +21,10 @@ class DatabaseLoaderPipelineConfig:
     # Config del loader
     db_alias: str = "QUANTA"
     model_class: Type = FactServiciosActivosEntity
-    mode: str = "IGNORE"  # Supuesto razonable; ajusta a INSERT/IGNORE si lo necesitas
+    mode: str = "UPDATE"  # Supuesto razonable; ajusta a INSERT/IGNORE si lo necesitas
 
     # Conflic Columns para Loader DW
-    conflict_cols: tuple[str] = ("id_user", "producto", "tipo_firma", "id_ruc_aux", 'serial_firma')
+    conflict_cols: tuple[str] = ("id_user", "producto", "tipo_firma", "id_ruc_aux")
 
 
 @dataclass(frozen=True)
@@ -54,6 +54,8 @@ class CurrentProductsPipelineConfig:
 
     # Claves únicas para deduplicar
     unique_keys: Sequence[str] = ("id_user", "id_ruc_aux", "producto")
+    update_columns_confict: tuple[str] = ('medio', 'vigencia', 'serial_firma', 'fecha_caducidad_max', 'fecha_emision',
+                                          'operador_creacion', 'link_renovacion', 'id_tramite', 'update_date', 'id_ruc')
 
     # Renombrado de columnas
     rename_map: Dict[str, str] = field(default_factory=lambda: {
@@ -114,7 +116,8 @@ class CurrentProductsPipeline:
                     mode=self.config_database.mode,
                     conflict_cols=list(self.config_database.conflict_cols),
                     batch_size=2500,
-                    commit_per_batch=True
+                    commit_per_batch=True,
+                    update_cols=self.config.update_columns_confict
                 )
             )
         ]

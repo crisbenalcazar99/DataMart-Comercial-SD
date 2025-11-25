@@ -8,8 +8,9 @@ class FactServiciosActivosEntity(Base, BaseModel):
     __tablename__ = 'current_products'
     __table_args__ = (
         UniqueConstraint(
-            'id_user', 'producto', 'tipo_firma', 'id_ruc_aux', 'serial_firma',
-            name='ux_current_products_logical_key'
+            'id_user', 'producto', 'tipo_firma', 'id_ruc_aux',
+            name='ux_current_products_logical_key',
+            # postgresql_nulls_not_distinct=True RECORDAR QUE DEBE SER NULL DISTINCR< CREAR ESTA VALIDACION POR CODIGO DB
         ),
         {'schema': 'operatividad'}
     )
