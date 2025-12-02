@@ -9,6 +9,8 @@ from pandas import DataFrame
 import pandas as pd
 
 from datawarehouse.common.session_manager import get_session
+from datawarehouse.models.Comercial.dim_articulos_entity import DimArticulosEntity
+from datawarehouse.models.Comercial.dim_clientes_entity import DimClientesEntity
 from datawarehouse.models.zoho.dim_rucs import DimRucsEntity
 from datawarehouse.models.zoho.dim_usuarios import DimUsuariosEntity
 
@@ -72,7 +74,7 @@ class FetchAndAttachId(BaseEstimator, TransformerMixin):
     def __init__(
             self,
             lookup_column: str,
-            entity: Union[type(DimRucsEntity), type(DimUsuariosEntity)],
+            entity: Union[type(DimRucsEntity), type(DimUsuariosEntity), type(DimClientesEntity), type(DimArticulosEntity)],
             merge_how: Literal["left", "right", "inner", "outer", "cross"] = "inner",
             run_mode: RunMode = RunMode.INICIAL
     ):
@@ -97,12 +99,14 @@ class FetchAndAttachId(BaseEstimator, TransformerMixin):
             )
             self.logger.info('TIPO DE MODE INCREMENTAL')
 
-        self.logger.info(where_func)
+        self.logger.info(self.entity.__table__.name)
         with get_session("QUANTA") as session:
             df_rucs = self.entity.fetch_id_map(
                 session=session,
                 where_func=where_func
             )
+        print(X.info())
+        print(df_rucs.info())
         X = X.merge(
             df_rucs,
             how=self.merge_how,

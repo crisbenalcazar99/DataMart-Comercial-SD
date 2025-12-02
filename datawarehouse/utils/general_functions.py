@@ -8,6 +8,12 @@ def load_sql_statement(query_name):
         return file.read()
 
 
+def load_sql_statement_comercial(folder_name, query_name):
+    query_path = get_proyect_root() / "include" / "sql" / "comercial" / folder_name / query_name
+    with open(query_path, 'r') as file:
+        return file.read()
+
+
 def load_sql_statement_operatividad(folder_name, query_name):
     query_path = get_proyect_root() / "include" / "sql" / "operatividad" / folder_name / query_name
     with open(query_path, 'r') as file:

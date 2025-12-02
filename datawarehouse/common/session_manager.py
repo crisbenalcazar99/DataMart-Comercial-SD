@@ -1,4 +1,4 @@
-from datawarehouse.common.db import SessionLocal, SessionPortal, SessionFenix, SessionCamunda, SessionQuanta
+from datawarehouse.common.db import SessionLocal, SessionPortal, SessionFenix, SessionCamunda, SessionQuanta, SessionLatinum
 from contextlib import contextmanager
 
 
@@ -13,6 +13,8 @@ def get_session(db_alias="default"):
         session = SessionCamunda()
     elif db_alias == 'QUANTA':
         session = SessionQuanta()
+    elif db_alias == 'LATINUM':
+        session = SessionLatinum()
     else:
         session = SessionLocal()
 

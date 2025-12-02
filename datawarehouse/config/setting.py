@@ -14,7 +14,8 @@ def get_db_config(prefix: str = "DB"):
         'port': env.get(f"DB_PORT_{prefix}"),
         'user': env.get(f"DB_USER_{prefix}"),
         'password': env.get(f"DB_PASSWORD_{prefix}"),
-        'database': env.get(f"DB_NAME_{prefix}", "")
+        'database': env.get(f"DB_NAME_{prefix}", ""),
+        'odbc_driver': env.get(f"DB_ODBC_DRIVER_{prefix}")  # <-- NUEVO
     }
 
 

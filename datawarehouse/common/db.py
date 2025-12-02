@@ -10,6 +10,7 @@ DB_CONFIG_LOCAL = get_db_config("LOCAL")
 DB_CONFIG_FENIX = get_db_config("FENIX")
 DB_CONFIG_CAMUNDA = get_db_config("CAMUNDA")
 DB_CONFIG_QUANTA = get_db_config("QUANTA")
+DB_CONFIG_LATINUM = get_db_config("LATINUM")
 
 
 # Engine y session para la base principal
@@ -28,6 +29,10 @@ SessionFenix = sessionmaker(autocommit=False, autoflush=False, bind=engine_fenix
 # Engine y session para la base de datos del CAMUNDA
 engine_camunda = create_engine(build_connection_url(DB_CONFIG_CAMUNDA), echo=False, hide_parameters=True)
 SessionCamunda = sessionmaker(autocommit=False, autoflush=False, bind=engine_camunda)
+
+# Engine y session para la base de datos del LATINUM
+engine_latinum = create_engine(build_connection_url(DB_CONFIG_LATINUM), echo=False, hide_parameters=True)
+SessionLatinum = sessionmaker(autocommit=False, autoflush=False, bind=engine_latinum)
 
 # Engine y session para la base de datos del QUANTA
 engine_quanta = create_engine(build_connection_url(DB_CONFIG_QUANTA), echo=False, hide_parameters=True, connect_args={"options": "-c TimeZone=America/Guayaquil"})

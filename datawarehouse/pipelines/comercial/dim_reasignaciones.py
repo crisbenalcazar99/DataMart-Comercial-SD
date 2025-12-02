@@ -1,16 +1,14 @@
 import pandas as pd
-
-from datawarehouse.etl.extract import DatabaseExtractor
-from datawarehouse.etl.load.db_load_test import DWLoader
-from datawarehouse.etl.transform import FetchClientIdTransform
-from datawarehouse.etl.transform import DtypeStringTransform, DtypeDateTransform
 from sklearn.pipeline import Pipeline
 
-from datawarehouse.etl.transform import TrimRowsObject, SortValues, DropDuplicatesTransform
-from datawarehouse.models.Comercial import ClientesEntity
-from datawarehouse.models.Comercial import ReasignacionesEntity
+from datawarehouse.common.session_manager import get_session
+from datawarehouse.etl.extract.db_extractor import DatabaseExtractor
+from datawarehouse.etl.transform.comercial_functions import FetchClientIdTransform
+from datawarehouse.etl.transform.dtypes_massive import DtypeStringTransform, DtypeDateTransform
+from datawarehouse.etl.transform.general_functions import SortValues, TrimRowsObject, DropDuplicatesTransform
+from datawarehouse.models.Comercial.dim_clientes_entity import DimClientesEntity
 from datawarehouse.utils.general_functions import load_sql_statement
-from datawarehouse.common import get_session
+
 
 def ejecutar_pipeline():
     query_name = ''
@@ -37,6 +35,7 @@ def ejecutar_pipeline():
 
     ])
 
+
 def preload_reasignaciones():
     path_excel_file = et_proyect_root() / "archivos" / "reasignaciones_precarga.xlsx"
     df_reasignaciones = pd.read_excel(path_excel_file, dtype={
@@ -44,10 +43,10 @@ def preload_reasignaciones():
     })
     for index, row in df_reasignaciones.iterrows():
         with get_session("LOCAL") as session:
-            id_cliente = ClientesEntity.get_cliente_id(
+            id_cliente = DimClientesEntity.get_cliente_id(
                 session=session,
                 where_func=lambda q: q.filter(
-                    ClientesEntity.cif == row['ruc']
+                    DimClientesEntity.cif == row['ruc']
                 )
             )
         df_reasignaciones.at[index, 'id_cliente'] = id_cliente

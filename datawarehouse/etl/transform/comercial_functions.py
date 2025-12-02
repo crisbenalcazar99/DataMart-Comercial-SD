@@ -1,18 +1,20 @@
+from typing import Literal
+
 from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
-from datawarehouse.common import get_session
-from datawarehouse.models.Comercial.articulos_entity import ArticulosEntity
-from datawarehouse.models.Comercial.vendedores_entity import VendedoresEntity
-from datawarehouse.models.Comercial.reasignaciones_entity import ReasignacionesEntity
-from datawarehouse.models.Comercial.clientes_entity import ClientesEntity
+from datawarehouse.common.session_manager import get_session
+from datawarehouse.models.Comercial.dim_articulos_entity import DimArticulosEntity
+from datawarehouse.models.Comercial.dim_vendedores_entity import DimVendedoresEntity
+from datawarehouse.models.Comercial.dim_reasignaciones_entity import DimReasignacionesEntity
+from datawarehouse.models.Comercial.dim_clientes_entity import DimClientesEntity
 
 
 def request_vendedores_db(list_cod_vendedor):
     with get_session("LOCAL") as session:
-        df_vendedores = VendedoresEntity.get_vendedores(
+        df_vendedores = DimVendedoresEntity.get_vendedores(
             session,
             where_func=lambda q: q.filter(
-                VendedoresEntity.cod_vendedor.in_(list_cod_vendedor)
+                DimVendedoresEntity.cod_vendedor.in_(list_cod_vendedor)
             )
         )
     return df_vendedores
@@ -61,12 +63,12 @@ class IdentificarVendedorReasignaciones(BaseEstimator, TransformerMixin):
         X_temp = X_temp[X_temp[self.column_id_vendedor].isna()]
         with get_session("LOCAL") as session:
             for index, row in X_temp.iterrows():
-                id_vendedor = ReasignacionesEntity.get_vendedor_id(
+                id_vendedor = DimReasignacionesEntity.get_vendedor_id(
                     session=session,
                     where_func=lambda q: (q
-                                          .filter(ReasignacionesEntity.id_cliente == row[self.column_id_cliente])
-                                          .filter(ReasignacionesEntity.date_init <= row[self.column_fecha_emision])
-                                          .filter(ReasignacionesEntity.date_end > row[self.column_fecha_emision])
+                                          .filter(DimReasignacionesEntity.id_cliente == row[self.column_id_cliente])
+                                          .filter(DimReasignacionesEntity.date_init <= row[self.column_fecha_emision])
+                                          .filter(DimReasignacionesEntity.date_end > row[self.column_fecha_emision])
                                           )
 
                 )
@@ -128,11 +130,11 @@ class FetchClientIdTransform(BaseEstimator, TransformerMixin):
 
     def transform(self, X=pd.DataFrame):
         cif_list = X[self.column_name].unique().tolist()
-        with get_session("LOCAL") as session:
-            clients = ClientesEntity.get_clientes(
+        with get_session("QUANTA") as session:
+            clients = DimClientesEntity.get_clientes(
                 session=session,
                 where_func=lambda q: q.filter(
-                    ClientesEntity.cif.in_(cif_list)
+                    DimClientesEntity.cif.in_(cif_list)
                 )
             )
         X = X.merge(
@@ -152,11 +154,11 @@ class FetchArticuloIdTransform(BaseEstimator, TransformerMixin):
 
     def transform(self, X=pd.DataFrame):
         cod_articulo_list = X[self.column_name].unique().tolist()
-        with get_session("LOCAL") as session:
-            articulos = ArticulosEntity.get_articulos(
+        with get_session("QUANTA") as session:
+            articulos = DimArticulosEntity.get_articulos(
                 session=session,
                 where_func=lambda q: q.filter(
-                    ArticulosEntity.cod_articulo.in_(cod_articulo_list)
+                    DimArticulosEntity.cod_articulo.in_(cod_articulo_list)
                 )
             )
         X = X.merge(
@@ -177,10 +179,10 @@ class FetchVendedorIdTransform(BaseEstimator, TransformerMixin):
     def transform(self, X=pd.DataFrame):
         rucs_list = X[self.column_name].unique().tolist()
         with get_session("LOCAL") as session:
-            clients = ClientesEntity.get_clientes(
+            clients = DimClientesEntity.get_clientes(
                 session=session,
                 where_func=lambda q: q.filter(
-                    ClientesEntity.cif.in_(rucs_list)
+                    DimClientesEntity.cif.in_(rucs_list)
                 )
             )
         X.merge(
@@ -200,10 +202,10 @@ class IdentifyChangeNewClients(BaseEstimator, TransformerMixin):
 
     def transform(self, X=pd.DataFrame):
         with get_session('LOCAL') as session:
-            clients_base = ClientesEntity.get_clientes_update(
+            clients_base = DimClientesEntity.get_clientes_update(
                 session=session,
                 where_func=lambda q: q.filter(
-                    ClientesEntity.cif.in_(self.clients_tuple)
+                    DimClientesEntity.cif.in_(self.clients_tuple)
                 )
             )
 
@@ -234,6 +236,27 @@ def build_date_filter_block(tx_date: str | None = None,
     params['tuple_codart'] = tuple_codart
     filter_base = f"AND ({' OR '.join(clauses)})" if clauses else ""
     return filter_base, params
+
+
+class AddTipoVendedorColumn(BaseEstimator, TransformerMixin):
+    def __init__(
+            self,
+            origen_request: Literal["fenix_firmas", "fenix_otros_productos", "fenix_TV", "latinum"],
+            add_column_name:str='tipo_vendedor', ):
+        self.add_column_name = add_column_name
+        self.origen_request = origen_request
+
+    def fit(self, X, y=None):
+        # No fitting neccesary for this transformes
+        return self
+
+    def transform(self, X=pd.DataFrame()):
+        if self.origen_request == 'fenix_TV':
+            X[self.add_column_name] = 61 # Codigo Catalogo Tercer Vinculado
+        else:
+            X[self.add_column_name] = 60
+        return X
+
 
 
 def apply_filter_to_query(query: str, tx_date: str | None, pay_date: str | None, tuple_codart: tuple[str, ...] | None):
