@@ -1,6 +1,85 @@
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
+import pandas as pd
+import numpy as np
+import re
+from unidecode import unidecode
+from sklearn.base import BaseEstimator, TransformerMixin
+
+import pandas as pd
+import numpy as np
+import re
+from unidecode import unidecode
+from sklearn.base import BaseEstimator, TransformerMixin
+
+
+class DtypeStringNormalization(BaseEstimator, TransformerMixin):
+    """
+    Transformer to clean and normalize string columns while preserving NULL values.
+
+    - Convierte valores a string
+    - Corta al tamaño deseado
+    - Normaliza acentos (á→a, ñ→n, etc.)
+    - Elimina caracteres especiales
+    - Convierte espacios múltiples
+    - Devuelve pd.NA para valores vacíos o nulos
+    """
+
+    def __init__(self, columns, length=255):
+        self.columns = columns if isinstance(columns, list) else [columns]
+        self.length = length
+
+    def fit(self, X, y=None):
+        return self
+
+    def _clean_text(self, value):
+        """Normalize text but return pd.NA for null/empty results."""
+
+        # Casos nulos desde el inicio
+        if value is None or pd.isna(value):
+            return pd.NA
+
+        # Convertir a string y limpiar espacios
+        value = str(value).strip()
+
+        # Si está vacío después del strip → NULL
+        if value == "":
+            return pd.NA
+
+        # Normalizar acentos y caracteres unicode (ñ→n, á→a, etc.)
+        value = unidecode(value)
+
+        # Convertir a mayúsculas
+        value = value.upper()
+
+        # Quitartodo lo que no sea A-Z, 0-9 o espacio
+        value = re.sub(r"[^A-Z0-9 ]", "", value)
+
+        # Reemplazar múltiples espacios por uno solo
+        value = re.sub(r"\s+", " ", value).strip()
+
+        # Si queda vacío → NULL
+        if value == "":
+            return pd.NA
+
+        return value
+
+    def transform(self, X):
+        if not isinstance(X, pd.DataFrame):
+            raise ValueError("Input must be a pandas DataFrame.")
+
+        for col in self.columns:
+            if col in X.columns:
+                X[col] = (
+                    X[col]
+                    .apply(lambda v: v if pd.isna(v) else str(v))  # No convertir NA en "nan"
+                    .str[:self.length]
+                    .apply(self._clean_text)
+                )
+
+        return X
+
 
 class DtypeDateTransform(BaseEstimator, TransformerMixin):
     """
@@ -112,7 +191,19 @@ class DtypeStringTransform(BaseEstimator, TransformerMixin):
 
         for col in self.columns:
             if col in X.columns:
-                X[col] = X[col].astype(str).str[:self.length]
+                # Guardar máscara de nulos
+                mask_null = X[col].isna()
+
+                # Convertir a string SOLO los no nulos
+                X.loc[~mask_null, col] = (
+                    X.loc[~mask_null, col]
+                    .astype(str)
+                    .str.upper()
+                    .str[:self.length]
+                )
+
+                # Restaurar nulos como pd.NA
+                X.loc[mask_null, col] = pd.NA
 
         return X
 

@@ -38,7 +38,7 @@ class RucsPipelineConfig:
     # Claves únicas para deduplicar
     unique_keys: Sequence[str] = ("ruc",)
     update_columns_conflict: tuple[str] = ('razon_social', 'actividad_ruc', 'clase_contribuyente', 'sector_economico',
-                                           'contribuyente_fantasma', 'update_date')
+                                           'contribuyente_fantasma', "update_date",)
 
     # Configuración del ordenamiento
     sort_by: Sequence[str] = ("fecha_emision",)

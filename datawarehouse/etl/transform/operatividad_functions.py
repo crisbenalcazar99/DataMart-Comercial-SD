@@ -2,11 +2,12 @@ import base64
 import logging
 import os
 
-from typing import Union, Literal
+from typing import Union, Literal, Sequence, List
 
 import numpy as np
 from pandas import DataFrame
 import pandas as pd
+from sqlalchemy import tuple_
 
 from datawarehouse.common.session_manager import get_session
 from datawarehouse.models.Comercial.dim_articulos_entity import DimArticulosEntity
@@ -74,7 +75,8 @@ class FetchAndAttachId(BaseEstimator, TransformerMixin):
     def __init__(
             self,
             lookup_column: str,
-            entity: Union[type(DimRucsEntity), type(DimUsuariosEntity), type(DimClientesEntity), type(DimArticulosEntity)],
+            entity: Union[
+                type(DimRucsEntity), type(DimUsuariosEntity), type(DimClientesEntity), type(DimArticulosEntity)],
             merge_how: Literal["left", "right", "inner", "outer", "cross"] = "inner",
             run_mode: RunMode = RunMode.INICIAL
     ):
@@ -92,27 +94,104 @@ class FetchAndAttachId(BaseEstimator, TransformerMixin):
 
         if self.run_mode is RunMode.INICIAL:
             where_func = None
-            self.logger.info('TIPO DE MODE INCIAL')
         else:
             where_func = lambda q: q.filter(
                 getattr(self.entity, self.lookup_column).in_(distinct_lookup_values)
             )
-            self.logger.info('TIPO DE MODE INCREMENTAL')
 
         self.logger.info(self.entity.__table__.name)
         with get_session("QUANTA") as session:
-            df_rucs = self.entity.fetch_id_map(
+            df_fetch_ids = self.entity.fetch_id_map(
                 session=session,
                 where_func=where_func
             )
-        print(X.info())
-        print(df_rucs.info())
         X = X.merge(
-            df_rucs,
+            df_fetch_ids,
             how=self.merge_how,
             on=self.lookup_column
         )
         X.drop(columns=[self.lookup_column], inplace=True)
+        return X
+
+
+class FetchAndAttachIdMultipleColumns(BaseEstimator, TransformerMixin):
+    def __init__(
+            self,
+            lookup_columns: Union[str, List[str]],
+            entity: Union[
+                type(DimRucsEntity), type(DimUsuariosEntity), type(DimClientesEntity), type(DimArticulosEntity)],
+            merge_how: Literal["left", "right", "inner", "outer", "cross"] = "inner",
+            run_mode: RunMode = RunMode.INICIAL
+    ):
+        """
+        lookup_columns: puede ser un string (una sola columna)
+                        o una lista de strings (varias columnas)
+        """
+        # Normalizamos internamente a lista
+        if isinstance(lookup_columns, str):
+            self.lookup_columns = [lookup_columns]
+        else:
+            self.lookup_columns = list(lookup_columns)
+        self.entity = entity
+        self.merge_how = merge_how
+        self.run_mode = run_mode
+        self.logger = logging.getLogger("FETCH ATTACH LOGGER")
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X: DataFrame = None) -> DataFrame:
+
+        # 1) Obtenemos combinaciones distintas de las columnas de lookup
+        #    (filtrando filas donde haya algún NaN en las columnas clave)
+        distinct_lookup_df = (
+            X[self.lookup_columns]
+            .dropna(subset=self.lookup_columns, how="any")
+            .drop_duplicates()
+        )
+
+        if self.run_mode is RunMode.INICIAL or distinct_lookup_df.empty:
+            where_func = None
+        else:
+            # Pasamos las combinaciones como lista de tuplas
+            lookup_tuples = [tuple(row) for row in distinct_lookup_df.to_numpy()]
+
+            if len(self.lookup_columns) == 1:
+                # Caso simple: una sola columna (mantiene compatibilidad)
+                col_entity = getattr(self.entity, self.lookup_columns[0])
+                where_func = lambda q: q.filter(col_entity.in_(
+                    [t[0] for t in lookup_tuples]
+                ))
+            else:
+                # Varios campos: usamos tuple_ de SQLAlchemy
+                cols_entity = [getattr(self.entity, c) for c in self.lookup_columns]
+                where_func = lambda q: q.filter(
+                    tuple_(*cols_entity).in_(lookup_tuples)
+                )
+
+        self.logger.info(self.entity.__table__.name)
+
+        with get_session("QUANTA") as session:
+            # IMPORTANTE: aquí asumo que fetch_id_map soporta where_func
+            # y devuelve un DataFrame que incluye las columnas de lookup
+            # más la columna ID (o la que uses para mapear).
+            df_fetch_ids = self.entity.fetch_id_map(
+                session=session,
+                where_func=where_func
+            )
+
+        # 2) Hacemos el merge por TODAS las columnas de lookup
+        X = X.merge(
+            df_fetch_ids,
+            how=self.merge_how,
+            on=self.lookup_columns
+        )
+
+        # 3) Eliminamos las columnas de lookup originales
+        X.drop(columns=self.lookup_columns, inplace=True)
+
+        X.info()
+
         return X
 
 
@@ -248,7 +327,7 @@ class GenerateLinkAutorenovacion(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X=None):
-        #X = X.copy()
+
 
         # 1) Asignar link_tipo_persona según el tipo de persona
         conditions = [
@@ -279,7 +358,7 @@ class GenerateLinkAutorenovacion(BaseEstimator, TransformerMixin):
         )
 
         # Opcional: filas sin link tengan NaN explícito:
-        X.loc[~mask, "link_renovacion"] = np.nan
+        X.loc[~mask, "link_renovacion"] = pd.NA
 
         return X
 

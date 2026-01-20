@@ -25,7 +25,7 @@ class DatabaseExtractor(BaseEstimator, TransformerMixin):
             stmt = text(self.query)
             with get_session(self.db_alias) as session:
                 df = pd.read_sql(stmt, session.bind, params=self.params)
-
+            print(df.info())
             return df
         except SQLAlchemyError as e:
             # Handle SQLAlchemy errors

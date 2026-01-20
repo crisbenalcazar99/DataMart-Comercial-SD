@@ -27,6 +27,10 @@ class FactServiciosActivosEntity(Base, BaseModel):
     id_ruc_aux = Column(Integer, nullable=True)
     link_renovacion = Column(String(1024))
     id_tramite = Column(Integer)
+    producto_especifico = Column(String(128))
+    tipo_atencion = Column(String(128))
+    medio_contacto = Column(String(128))
+    grupo_operador = Column(String(128))
     creation_date = Column(
         DateTime(timezone=False),
         server_default=func.now(),   # Fecha/hora de creación (la pone la BD)

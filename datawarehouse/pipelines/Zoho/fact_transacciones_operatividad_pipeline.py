@@ -38,7 +38,11 @@ class TransactionHistoryPipelineConfig:
         "vigencia",
         "operador_creacion",
         "id_tramite",
-        "link_renovacion"
+        "link_renovacion",
+        "producto_especifico",
+        "tipo_atencion",
+        "medio_contacto",
+        "grupo_operador"
     )
 
     # Configuración de los transforms de enriquecimiento
@@ -58,7 +62,10 @@ class TransactionHistoryPipelineConfig:
     conflict_cols: tuple[str] = ("serial_firma",)
     update_columns_conflict: tuple[str] = ('producto', 'medio', 'vigencia', 'tipo_firma', 'serial_firma',
                                            'estado_firma', 'fecha_aprobacion', 'fecha_caducidad', 'fecha_emision',
-                                           'operador_creacion', 'link_renovacion', 'id_tramite', 'id_user', 'id_ruc')
+                                           'operador_creacion', 'link_renovacion', 'id_tramite', 'id_user', 'id_ruc',
+                                           'producto_especifico', "tipo_atencion", "medio_contacto", "grupo_operador",
+                                           'update_date')
+    #update_columns_conflict: tuple[str] = ("vigencia", 'update_date')
 
     # Nombre legible para logs
     pipeline_name: str = "Pipeline Histórico Transacciones → DW"

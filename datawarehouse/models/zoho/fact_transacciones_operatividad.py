@@ -25,7 +25,11 @@ class FactTransaccionesOperatividadEntity(Base, BaseModel):
     fecha_emision = Column(DateTime)
     operador_creacion = Column(String(128))
     link_renovacion = Column(String(1024))
+    producto_especifico = Column(String(128))
     id_tramite = Column(Integer)
+    tipo_atencion = Column(String(128))
+    medio_contacto = Column(String(128))
+    grupo_operador = Column(String(128))
     creation_date = Column(
         DateTime(timezone=False),
         server_default=func.now(),  # Fecha/hora de creación (la pone la BD)

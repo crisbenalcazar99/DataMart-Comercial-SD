@@ -27,11 +27,15 @@ class DropDuplicatesTransform(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X=pd.DataFrame):
+        print('Previo Drop Duplicate')
+        X.info()
         mask = X[self.subset].isnull().all(axis=1)
         X = X[~mask]
         X.drop_duplicates(subset=self.subset, keep=self.keep, inplace=True)
         if self.reset_index:
             X.reset_index(drop=self.drop_index, inplace=True)
+        print('Posterior Drio Duplicate')
+        X.info()
         return X
 
 
@@ -100,7 +104,12 @@ class SortValues(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X=pd.DataFrame):
+        print('PREVIO ORDENAR')
+        print(X.info())
         X.sort_values(by=self.columns, ascending=self.order_ascending, inplace=True)
+        # 🔥 Resetear el índice para que quede ordenado desde 0
+        X.reset_index(drop=True, inplace=True)
+        print(X.info())
         return X
 
 

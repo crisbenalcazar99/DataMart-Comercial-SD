@@ -24,13 +24,20 @@ SELECT
       WHEN (sf_control = 0) then 'FIRMA ELECTRONICA'
 	 	WHEN (sf_control = 1) then 'SF CON FIRMA' 
 	 end as producto,
+	 CASE WHEN (renova = 'Si' and sf_control = 0) then 'Renovacion' 
+	 when (renova = 'No' and sf_control = 0) then 'Emision'
+	 when (renova = 'Si' and sf_control = 1) THEN 'Renovacion SF'
+	 when (renova = 'No' and sf_control = 1) THEN 'Emision SF'
+	 END AS 'producto_especifico',
 	 case when estado_pn = 1 then 'Aprobado'
 	 when estado_pn = 5 then 'Emitida'
 	 END AS estado_firma,
 	 member_of_operador AS operador_creacion,
 	 NULL AS fecha_nacimiento,
 	 NULL AS profesion,
-	 id_pn AS link_id_firma
+	 id_pn AS link_id_firma,
+	 atencion AS tipo_atencion,
+	 medio_contacto
 	 
 FROM Certificados_Electronicos_Subca2.persona_natural
 WHERE estado_pn IN (1, 5) 
@@ -74,13 +81,21 @@ SELECT
       WHEN (sf_control = 0) then 'FIRMA ELECTRONICA'
 	 	WHEN (sf_control = 1) then 'SF CON FIRMA'
 		end as producto,
+	 CASE WHEN (renova = 'Si' and sf_control = 0) then 'Renovacion' 
+	 	when (renova = 'No' and sf_control = 0) then 'Emision'
+	 	when (renova = 'Si' and sf_control = 1) THEN 'Renovacion SF'
+	 	when (renova = 'No' and sf_control = 1) THEN 'Emision SF'
+	 END AS 'producto_especifico',
 	 case when estado_me = 1 then 'Aprobado'
 	 when estado_me = 5 then 'Emitida'
 	 END AS estado_firma,
 	 member_of_operador AS operador_creacion,
 	 NULL AS fecha_nacimiento,
 	 NULL AS profesion,
-	 id_me AS link_id_firma
+	 id_me AS link_id_firma,
+	 atencion AS tipo_atencion,
+	 medio_contacto
+	 
 FROM Certificados_Electronicos_Subca2.miembro_empresa
 WHERE estado_me IN (1, 5)
   AND nombre NOT LIKE '%prueb%'
@@ -120,14 +135,21 @@ SELECT
       WHEN (sf_control = 0) then 'FIRMA ELECTRONICA'
 	 	WHEN (sf_control = 1) then 'SF CON FIRMA'
 		end as producto,
+	 CASE WHEN (renova = 'Si' and sf_control = 0) then 'Renovacion' 
+	 	when (renova = 'No' and sf_control = 0) then 'Emision'
+	 	when (renova = 'Si' and sf_control = 1) THEN 'Renovacion SF'
+	 	when (renova = 'No' and sf_control = 1) THEN 'Emision SF'
+	 	END AS 'producto_especifico',
 	 case when estado_rl = 1 then 'Aprobado'
 	 when estado_rl = 5 then 'Emitida'
 	 END AS estado_firma,
 	 member_of_operador AS 'operador_creacion',
 	 NULL AS fecha_nacimiento,
 	 NULL AS profesion,
-	 id_rl AS link_id_firma
-	 
+	 id_rl AS link_id_firma,
+	 atencion AS tipo_atencion,
+	 medio_contacto
+	 	 
 FROM Certificados_Electronicos_Subca2.representante_legal
 WHERE estado_rl IN (1, 5)
   AND nombre NOT LIKE '%prueb%'
@@ -157,13 +179,16 @@ SELECT
     TRIM(SUBSTRING(nombres, LENGTH(SUBSTRING_INDEX(nombres, ' ', 2)) + 1)) AS nombre,
     TIMESTAMPADD(year, vigenciaServicio, fechaAprob) AS "fecha_caducidad",
     "SF SIN FIRMA" producto,
+    'Emision SF sin Firma' AS 'producto_especifico',
 	 case when estado = 1 then 'Aprobado'
 	 when estado = 5 then 'Emitida'
 	 END AS estado_firma,
 	 operador AS operador_creacion,
 	 NULL AS fecha_nacimiento,
 	 NULL AS profesion,
-	 NULL AS link_id_firma
+	 NULL AS link_id_firma,
+	 atencion AS tipo_atencion,
+	 null as medio_contacto
 FROM Certificados_Electronicos_Subca2.tb_securityFSinFirma
 WHERE estado IN (1, 5)
   AND nombres NOT LIKE '%prueb%'

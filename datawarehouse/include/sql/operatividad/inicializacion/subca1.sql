@@ -4,6 +4,7 @@ SELECT
 	 fecha_aprob AS fecha_aprobacion, 
 	 fecha_emision,
 	 'FIRMA ELECTRONICA' AS  producto,
+	 CASE WHEN renova = 'Si' then 'Renovacion' ELSE 'Emision' END AS "producto_especifico",
 	 case when estado_pn = 1 then 'Aprobado'
 	 when estado_pn = 5 then 'Emitida'
 	 END AS estado_firma,
@@ -21,7 +22,9 @@ SELECT
 	 member_of_operador AS operador_creacion,
 	 NULL AS fecha_nacimiento,
 	 NULL AS profesion,
-	 id_pn AS link_id_firma
+	 id_pn AS link_id_firma,
+	 atencion AS tipo_atencion,
+	 NULL AS "medio_contacto"
 FROM Certificados_Electronicos_Subca1.persona_natural
 WHERE estado_pn IN (1, 5) 
   AND nombre NOT LIKE '%prueb%'
@@ -43,6 +46,7 @@ SELECT
 	 fecha_aprob AS fecha_aprobacion, 
 	 fecha_emision,
 	 'FIRMA ELECTRONICA' AS  producto,
+	 CASE WHEN renova = 'Si' then 'Renovacion' ELSE 'Emision' END AS 'producto_especifico',
 	 case when estado_me = 1 then 'Aprobado'
 	 when estado_me = 5 then 'Emitida'
 	 END AS estado_firma,
@@ -61,7 +65,9 @@ SELECT
 	 member_of_operador AS operador_creacion,
 	 NULL AS fecha_nacimiento,
 	 NULL AS profesion,
-	 id_me AS link_id_firma
+	 id_me AS link_id_firma,
+	 atencion AS tipo_atencion,
+	 NULL AS "medio_contacto"
 FROM Certificados_Electronicos_Subca1.miembro_empresa
 WHERE estado_me IN (1, 5)
   AND nombre NOT LIKE '%prueb%'
@@ -81,6 +87,7 @@ SELECT
 	 fecha_aprob AS fecha_aprobacion,
 	 fecha_emision, 
 	 'FIRMA ELECTRONICA' AS  producto,
+	 CASE WHEN renova = 'Si' then 'Renovacion' ELSE 'Emision' END AS 'producto_especifico',
 	 case when estado_rl = 1 then 'Aprobado'
 	 when estado_rl = 5 then 'Emitida'
 	 END AS estado_firma,
@@ -98,7 +105,9 @@ SELECT
 	 member_of_operador AS operador_creacion,
 	 NULL AS fecha_nacimiento,
 	 NULL AS profesion,
-	 id_rl AS link_id_firma
+	 id_rl AS link_id_firma,
+	 atencion AS tipo_atencion,
+	 NULL AS "medio_contacto"
 FROM Certificados_Electronicos_Subca1.representante_legal
 WHERE estado_rl IN (1, 5)
   AND nombre NOT LIKE '%prueb%'

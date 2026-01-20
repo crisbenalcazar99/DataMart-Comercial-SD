@@ -9,7 +9,7 @@ from datawarehouse.common.session_manager import get_session
 from datawarehouse.config.logging_pipeline import LoggingPipeline
 from datawarehouse.etl.extract.db_extractor import DatabaseExtractor
 from datawarehouse.etl.transform.dtypes_massive import DtypeStringTransform, DtypeDateTransform, DtypeBooleanTransform, \
-    DtypeIntegerTransform
+    DtypeIntegerTransform, DtypeStringNormalization
 from datawarehouse.etl.transform.general_functions import (
     ConcatDataFrames,
     DropDuplicatesTransform,
@@ -42,7 +42,8 @@ class StagingIntegradorOperatividad:
     COLUMNS_STR: List[str] = [
         "cedula", "vigencia", "producto", "mediocam", "razon_social", "ruc",
         "tipo_firma", "estado_firma", "serial_firma", "correo", "telefono", "nombre", "apellido_paterno",
-        "apellido_materno", "operador_creacion", "profesion", "clase_contribuyente", "sector_economico", "actividad_ruc"
+        "apellido_materno", "operador_creacion", "profesion", "clase_contribuyente", "sector_economico", "actividad_ruc",
+        "producto_especifico", "tipo_atencion", "medio_contacto", "grupo_operador",
     ]
     COLUMNS_STR_128: List[str] = [
         "apellido_paterno", "apellido_materno", "nombre"
@@ -52,8 +53,13 @@ class StagingIntegradorOperatividad:
         "cedula", "ruc"
     ]
 
+    COLUMNS_STR_NORMALIZATION: List[str] = [
+        "razon_social", "sector_economico", "actividad_ruc",
+
+    ]
+
     COLUMNS_INTEGER: List[str] = [
-        "id_tramite", "link_id_firma"
+        "id_tramite", "link_id_firma", 'id_provincia', 'id_canton', 'id_parroquia', 'security_points'
     ]
 
     COLUMNS_DATETIME: List[str] = ["fecha_aprobacion", "fecha_caducidad", "fecha_emision", "fecha_nacimiento"]
@@ -67,21 +73,42 @@ class StagingIntegradorOperatividad:
     }
 
     PRODUCT_NORMALIZATION: Dict[str, str] = {
-        "Emision": "FIRMA ELECTRONICA",
-        "Renovacion": "FIRMA ELECTRONICA",
-        "Recuperacion Clave": "FIRMA ELECTRONICA",
-        "Agregar RUC a Firma": "FIRMA ELECTRONICA",
-        "Emision SF sin Firma": "SF SIN FIRMA",
-        "Emision SF": "SF CON FIRMA",
-        "Renovacion SF": "SF CON FIRMA",
+        "EMISION": "FIRMA ELECTRONICA",
+        "RENOVACION": "FIRMA ELECTRONICA",
+        "RECUPERACION CLAVE": "FIRMA ELECTRONICA",
+        "AGREGAR RUC A FIRMA": "FIRMA ELECTRONICA",
+        "EMISION SF SIN FIRMA": "SF SIN FIRMA",
+        "EMISION SF": "SF CON FIRMA",
+        "RENOVACION SF": "SF CON FIRMA",
+    }
+
+    MEDIO_CONTACTO_NORMALIZATION: Dict[str, str] = {
+        "ISABEL RENOVACIONES": "ISABEL",
+        "CALL CENTERA": "CALL CENTER",
+        "ISABEL RENOVACIONES DATABOOK": "ISABEL",
+        "FMANUAL": pd.NA,
+        "RECUPERA_PASSWORD": pd.NA,
+        "ISABEL%20RENOVACIONES": "ISABEL",
+        "SF_RENOVACION_ISABELA": "ISABEL",
+        "PP": pd.NA,
+        "": pd.NA
+    }
+
+    TIPO_ATENCION_NORMALIZATION: Dict[str, str] = {
+        "VALIDACION_EN_LINEA": "VALIDACION EN LINEA",
+        "ATENCIÃ³N CITA EXPRESS": "CITA EXPRESS",
+        "-1": pd.NA,
+        "": pd.NA,
+        "ATENCIÓN EN LÍNEA, LA FORMA MÁS FÁCIL Y RÁPIDA DE OBTENER TU FIRMA ELECTRÓNICA": "VALIDACION EN LINEA",
+        "ATENCIÓN EN OFICINA": "CITA EXPRESS"
     }
 
     # Especificación de fuentes por modo
     SOURCES_BY_MODE: Dict[RunMode, List[SourceSpec]] = {
         RunMode.INICIAL: [
-            SourceSpec("subca1", "PORTAL", "subca1.sql", "P_SUBCA1", "SO_PORTALES"),
-            SourceSpec("subca2", "PORTAL", "subca2.sql", "P_SUBCA2", "SO_PORTALES"),
-            SourceSpec("camunda", "CAMUNDA", "camunda.sql", "P_CAMUNDA", "SO_CAMUNDA"),
+            # SourceSpec("subca1", "PORTAL", "subca1.sql", "P_SUBCA1", "SO_PORTALES"),
+            # SourceSpec("subca2", "PORTAL", "subca2.sql", "P_SUBCA2", "SO_PORTALES"),
+            SourceSpec("camunda", "CAMUNDA", "camunda_part1.sql", "P_CAMUNDA", "SO_CAMUNDA"),
         ],
         RunMode.INCREMENTAL: [
             #SourceSpec("subca1", "PORTAL", "subca1_incremental.sql"),
@@ -108,7 +135,6 @@ class StagingIntegradorOperatividad:
 
         # Integración final
         df = cls._integration_pipeline().fit_transform(frames)
-        # df = df[df['fecha_nacimiento'].notna()]
         return df
 
 
@@ -132,15 +158,16 @@ class StagingIntegradorOperatividad:
         return LoggingPipeline(
             steps=[
                 ("extractor database", DatabaseExtractor(db_alias=spec.db_alias, query=sql_text, params=params)),
-                ("Transform String", DtypeStringTransform(cls.COLUMNS_STR, 255)),
-                ("Transform String", DtypeStringTransform(cls.COLUMNS_STR_128, 128)),
-                ("Transform String", DtypeStringTransform(cls.COLUMNS_STR_32, 32)),
+                ("Transform String STR", DtypeStringTransform(cls.COLUMNS_STR, 255)),
+                ("Transform String STR 128", DtypeStringTransform(cls.COLUMNS_STR_128, 128)),
+                ("Transform String STR 32", DtypeStringTransform(cls.COLUMNS_STR_32, 32)),
                 ("Transform Datetime", DtypeDateTransform(cls.COLUMNS_DATETIME)),
                 ("Transform Boolean", DtypeBooleanTransform(cls.COLUMNS_BOOLEAN)),
                 ("Transform Integer", DtypeIntegerTransform(cls.COLUMNS_INTEGER)),
                 ('Delete Black Space start/End', TrimRowsObject()),
                 ('Add columns para link', AddConstantColumn('link_emisor', spec.link_emisor)),
-                ('Add columns para link', AddConstantColumn('link_so', spec.link_so))
+                ('Add columns para link', AddConstantColumn('link_so', spec.link_so)),
+                ('Nomralization de los servicios', DtypeStringNormalization(cls.COLUMNS_STR_NORMALIZATION))
             ],
             pipeline_name=f"Pipeline Extract {spec.name.upper()}",
         )
@@ -157,6 +184,18 @@ class StagingIntegradorOperatividad:
         for old, new in cls.PRODUCT_NORMALIZATION.items():
             replace_steps.append(
                 (f"Normalizar producto: {old} → {new}", ReplaceTextTransform(old, new, "producto"))
+            )
+
+        # Normalización de 'Medio Cintacto'
+        for old, new in cls.MEDIO_CONTACTO_NORMALIZATION.items():
+            replace_steps.append(
+                (f"Normalizar medio_contacto: {old} → {new}", ReplaceTextTransform(old, new, "medio_contacto"))
+            )
+
+        # Normalización de 'tipo_atencion'
+        for old, new in cls.TIPO_ATENCION_NORMALIZATION.items():
+            replace_steps.append(
+                (f"Normalizar tipo_atencion: {old} → {new}", ReplaceTextTransform(old, new, "tipo_atencion"))
             )
 
         # Relleno de NULLs (ruc / razon_social)

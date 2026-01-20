@@ -25,6 +25,11 @@ class DatabaseLoaderPipelineConfig:
 
     # Conflic Columns para Loader DW
     conflict_cols: tuple[str] = ("id_user", "producto", "tipo_firma", "id_ruc_aux")
+    update_columns_conflict: tuple[str] = ('medio', 'vigencia', 'serial_firma', 'fecha_caducidad_max', 'fecha_emision',
+                                          'operador_creacion', 'link_renovacion', 'id_tramite', 'id_ruc',
+                                          'producto_especifico', "tipo_atencion", "medio_contacto", "grupo_operador",
+                                           "update_date")
+    # update_columns_conflict: tuple[str] = ("vigencia", 'update_date')
 
 
 @dataclass(frozen=True)
@@ -45,7 +50,11 @@ class CurrentProductsPipelineConfig:
         "vigencia",
         'operador_creacion',
         "link_renovacion",
-        "id_tramite"
+        "id_tramite",
+        "producto_especifico",
+        "tipo_atencion",
+        "medio_contacto",
+        "grupo_operador"
     )
 
     # Ordenamiento para seleccionar el registro 'actual'
@@ -54,8 +63,6 @@ class CurrentProductsPipelineConfig:
 
     # Claves únicas para deduplicar
     unique_keys: Sequence[str] = ("id_user", "id_ruc_aux", "producto")
-    update_columns_confict: tuple[str] = ('medio', 'vigencia', 'serial_firma', 'fecha_caducidad_max', 'fecha_emision',
-                                          'operador_creacion', 'link_renovacion', 'id_tramite', 'update_date', 'id_ruc')
 
     # Renombrado de columnas
     rename_map: Dict[str, str] = field(default_factory=lambda: {
@@ -111,15 +118,15 @@ class CurrentProductsPipeline:
             ("Renombrar columnas", RenameColumnsTransform(dict_names=dict(self.config.rename_map))),
 
             ("Carga en DW", DWBatchedLoader(
-                    db_alias=self.config_database.db_alias,
-                    model_class=self.config_database.model_class,
-                    mode=self.config_database.mode,
-                    conflict_cols=list(self.config_database.conflict_cols),
-                    batch_size=2500,
-                    commit_per_batch=True,
-                    update_cols=self.config.update_columns_confict
-                )
+                db_alias=self.config_database.db_alias,
+                model_class=self.config_database.model_class,
+                mode=self.config_database.mode,
+                conflict_cols=list(self.config_database.conflict_cols),
+                batch_size=2500,
+                commit_per_batch=True,
+                update_cols=self.config_database.update_columns_conflict
             )
+             )
         ]
 
         return LoggingPipeline(steps=steps, pipeline_name=self.config.pipeline_name)
