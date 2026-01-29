@@ -59,3 +59,16 @@ class FactTransaccionesOperatividadEntity(Base, BaseModel):
 
         result = query.scalar()
         return str(result) if result else None
+
+    @classmethod
+    def get_register_idtramite(cls, session: Session, where_func=None):
+        query = session.query(
+            FactTransaccionesOperatividadEntity.id_tramite
+        )
+
+        if where_func:
+            query = where_func(query)
+
+        # Devuelve una tuple plana
+        return tuple(row[0] for row in query.all())
+

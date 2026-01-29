@@ -108,7 +108,7 @@ class StagingIntegradorOperatividad:
         RunMode.INICIAL: [
             # SourceSpec("subca1", "PORTAL", "subca1.sql", "P_SUBCA1", "SO_PORTALES"),
             # SourceSpec("subca2", "PORTAL", "subca2.sql", "P_SUBCA2", "SO_PORTALES"),
-            SourceSpec("camunda", "CAMUNDA", "camunda_part1.sql", "P_CAMUNDA", "SO_CAMUNDA"),
+            SourceSpec("camunda", "CAMUNDA", "camunda.sql", "P_CAMUNDA", "SO_CAMUNDA"),
         ],
         RunMode.INCREMENTAL: [
             #SourceSpec("subca1", "PORTAL", "subca1_incremental.sql"),

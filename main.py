@@ -19,6 +19,7 @@ from datawarehouse.models.Comercial.fact_detalle_transacciones_entity import Fac
 from datawarehouse.config.logger_config import setup_logger
 import logging
 
+from datawarehouse.pipelines.Zoho.actualizacion_emision_pipeline import UpdateTrasactionHistoryPipeline
 from datawarehouse.pipelines.Zoho.dim_rucs_pipeline import RucsPipeline
 from datawarehouse.pipelines.Zoho.dim_users_pipeline import UsersPipeline
 from datawarehouse.pipelines.Zoho.fact_servicios_activos_pipeline import CurrentProductsPipeline
@@ -61,6 +62,9 @@ if __name__ == "__main__":
     # ClientesPipeline().run(df_general)
     # FacturasComercialPipeline().run(df_general)
     # TransactionDetailsPipeline().run(df_general)
+
+    # ---------------- TEST UPDATE ------------------
+    UpdateTrasactionHistoryPipeline().run()
 
 
 

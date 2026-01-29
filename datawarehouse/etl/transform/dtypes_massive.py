@@ -95,6 +95,7 @@ class DtypeDateTransform(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        print(X.info())
         if not isinstance(X, pd.DataFrame):
             raise ValueError("Input must be a pandas DataFrame.")
 

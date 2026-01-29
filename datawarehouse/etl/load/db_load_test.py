@@ -3,6 +3,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 import logging
 
+from sqlalchemy import update, bindparam, func
+
 from datawarehouse.common.session_manager import get_session
 
 
@@ -11,7 +13,7 @@ class DWLoader(BaseEstimator, TransformerMixin):
         """
         Carga los datos al data warehouse (PostgreSQL por defecto).
         - table_name: nombre de la tabla destino
-        - if_exists: comportamiento si la tabla existe ('fail', 'replace', 'append')
+        - if_exists:
         - index: si incluye índice del DataFrame en la tabla
         """
         self.model_class = model_class
@@ -149,4 +151,99 @@ class DWBatchedLoader(BaseEstimator, TransformerMixin):
             raise
 
         print("Finalizó Proceso de Carga al DataWarehouse (por batches).")
+        return X
+
+
+class DWBatchedUpdater:
+    def __init__(self, db_alias, model_class, batch_size: int = 10_000, update_date_col: str = "update_date"):
+        """
+        Carga los datos al data warehouse usando UPDATE puro en batches.
+
+        db_alias: alias de la base de datos
+        model_class: clase SQLAlchemy de la tabla destino
+        batch_size: tamaño de batch
+        """
+        self.model_class = model_class
+        self.db_alias = db_alias
+        self.batch_size = batch_size
+        self.update_date_col = update_date_col
+        self.logger = logging.getLogger("database logger")
+
+    def fit(self, X, y=None):
+        return self
+
+    def _iter_batches(self, X: pd.DataFrame):
+        n_rows = len(X)
+        for start in range(0, n_rows, self.batch_size):
+            end = start + self.batch_size
+            yield start, end, X.iloc[start:end]
+
+    def transform(self, X: pd.DataFrame):
+        if not isinstance(X, pd.DataFrame):
+            raise ValueError("El input de DWBatchedLoader debe ser un DataFrame de pandas.")
+
+        if X.empty:
+            self.logger.info("DataFrame vacío recibido. No se realiza ninguna carga.")
+            print("No hay filas para actualizar en el DataWarehouse.")
+            return X
+
+        try:
+            # Convertir NaN/NaT a None para SQLAlchemy
+            X = X.replace({np.nan: None})
+
+            total_rows = len(X)
+            total_batches = (total_rows + self.batch_size - 1) // self.batch_size
+            self.logger.info(
+                "Iniciando actualización en batches. Total filas: %s, batch_size: %s, total_batches: %s",
+                total_rows,
+                self.batch_size,
+                total_batches,
+            )
+
+            with get_session(db_alias=self.db_alias) as session:
+                for i, (start, end, batch_df) in enumerate(self._iter_batches(X), start=1):
+                    try:
+                        # Crear el diccionario de valores dinámicamente
+                        values_dict = {
+                            self.update_date_col: bindparam("fecha_caducidad"),  # columna dinámica recibe bindparam
+                            "fecha_emision": bindparam("fecha_emision"),
+                            "update_date": func.now()  # si quieres que esta siempre sea ahora
+                        }
+
+                        stmt = (
+                            update(self.model_class.__table__)
+                            .where(self.model_class.__table__.c.serial_firma == bindparam("b_serial_firma"))
+                            .values(**values_dict)
+                        )
+
+                        batch_df['b_serial_firma'] = batch_df['serial_firma']
+                        session.execute(stmt, batch_df.to_dict("records"))
+                        session.commit()
+
+                        msg = (
+                            f"[INFO] Batch {i}/{total_batches}: "
+                            f"{len(batch_df)} filas actualizadas "
+                            f"en '{self.model_class.__table__.name}' "
+                            f"(filas {start}-{end - 1})."
+                        )
+                        self.logger.info(msg)
+
+                    except Exception as e_batch:
+                        self.logger.error(
+                            "Error en batch %s/%s, filas %s-%s: %s - %s",
+                            i,
+                            total_batches,
+                            start,
+                            end - 1,
+                            e_batch.__class__.__name__,
+                            e_batch
+                        )
+                        raise
+
+        except Exception as e:
+            self.logger.error("Error en actualización SQLAlchemy: %s", e.__class__.__name__)
+            self.logger.error("Mensaje: %s", e)
+            raise
+
+        print("Finalizó proceso de actualización en DataWarehouse.")
         return X

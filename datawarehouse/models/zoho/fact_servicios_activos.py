@@ -1,7 +1,7 @@
 from datawarehouse.models.base_model import BaseModel
 from datawarehouse.models.base import Base
 from sqlalchemy import Column, Integer, String, DateTime, func, ForeignKey, BigInteger, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Session
 
 
 class FactServiciosActivosEntity(Base, BaseModel):
@@ -49,3 +49,15 @@ class FactServiciosActivosEntity(Base, BaseModel):
 
     id_ruc = Column(BigInteger, ForeignKey('operatividad.dim_rucs.id'), nullable=True)
     rucs = relationship("DimRucsEntity", back_populates="current_products")
+
+    @classmethod
+    def get_register_idtramite(cls, session: Session, where_func=None):
+        query = session.query(
+            FactServiciosActivosEntity.id_tramite
+        )
+
+        if where_func:
+            query = where_func(query)
+
+        # Devuelve una tuple plana
+        return tuple(row[0] for row in query.all())

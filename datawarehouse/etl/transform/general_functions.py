@@ -137,6 +137,26 @@ class FilterColumns(BaseEstimator, TransformerMixin):
         return X
 
 
+class DropRowNaDates(BaseEstimator, TransformerMixin):
+    def __init__(self, columns):
+        """
+        columns: lista de columnas de tipo fecha en las cuales se eliminarán filas con valores nulos.
+        """
+        self.columns = columns
+
+    def fit(self, X, y=None):
+        # No necesita aprender nada de los datos
+        return self
+
+    def transform(self, X):
+        """
+        Elimina filas donde cualquiera de las columnas de fecha especificadas tenga valores nulos.
+        """
+        X = X.copy()
+        X = X.dropna(subset=self.columns)
+        return X
+
+
 class ConcatDataFrames(BaseEstimator, TransformerMixin):
     def __init__(self, ignore_index=True):
         self.ignore_index = ignore_index

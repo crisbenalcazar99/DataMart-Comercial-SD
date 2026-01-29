@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 import logging
 
-
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 
+from datawarehouse.pipelines.Zoho.actualizacion_emision_pipeline import UpdateTrasactionHistoryPipeline
 from datawarehouse.pipelines.Zoho.dim_users_pipeline import UsersPipeline
 from datawarehouse.pipelines.Zoho.dim_rucs_pipeline import RucsPipeline
 from datawarehouse.pipelines.Zoho.fact_servicios_activos_pipeline import CurrentProductsPipeline
@@ -36,7 +36,7 @@ def run_users(**context):
         task_ids="staging_integrador",
         key="df_general",
     )
-    UsersPipeline().run(df_general)
+    UsersPipeline(run_mode=RunMode.INCREMENTAL).run(df_general)
 
 
 def run_rucs(**context):
@@ -69,6 +69,10 @@ def run_current_products(**context):
     CurrentProductsPipeline().run(df_transacciones_operatividad)
 
 
+def run_update_history(**context):
+    UpdateTrasactionHistoryPipeline().run()
+
+
 default_args = {
     "owner": "airflow",
     "email": ["bi@securitydata.net.ec"],
@@ -80,16 +84,15 @@ default_args = {
 }
 
 with DAG(
-    dag_id="dag_operatividad_incremental",
-    description="DAG Actualizacion Incremental Informacion de Operatividad Zoho",
-    start_date=datetime(2025, 11, 21),
-    schedule="30 7,11,16 * * *",
-    catchup=False,
-    tags=["operatividad", "ZOHO", "CAMUNDA", "QUANTA", "Incremental"],
-    default_args=default_args,
+        dag_id="dag_operatividad_incremental",
+        description="DAG Actualizacion Incremental Informacion de Operatividad Zoho",
+        start_date=datetime(2025, 11, 21),
+        schedule="30 7,10,13,16 * * *",
+        catchup=False,
+        tags=["operatividad", "ZOHO", "CAMUNDA", "QUANTA", "Incremental"],
+        default_args=default_args,
 
 ) as dag:
-
     task_staging = PythonOperator(
         task_id="staging_integrador",
         python_callable=run_staging,
@@ -115,4 +118,9 @@ with DAG(
         python_callable=run_current_products,
     )
 
-    task_staging >> task_users >> task_rucs >> task_transacciones >> task_current_products
+    task_run_update_history = PythonOperator(
+        task_id="Update Expiration-Emision Date",
+        python_callable=run_update_history,
+    )
+
+    task_staging >> task_users >> task_rucs >> task_transacciones >> task_current_products >> task_run_update_history
