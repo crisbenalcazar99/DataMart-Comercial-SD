@@ -25,7 +25,6 @@ class DatabaseExtractor(BaseEstimator, TransformerMixin):
             stmt = text(self.query)
             with get_session(self.db_alias) as session:
                 df = pd.read_sql(stmt, session.bind, params=self.params)
-            print(df.info())
             return df
         except SQLAlchemyError as e:
             # Handle SQLAlchemy errors
@@ -49,8 +48,6 @@ class DatabaseExtractorSQLServer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X=None):
-        print(self.db_alias)
-
         if self.query is None:
             raise ValueError("Query must be provided for transformation.")
 
@@ -64,7 +61,6 @@ class DatabaseExtractorSQLServer(BaseEstimator, TransformerMixin):
                         stmt = stmt.bindparams(bindparam(key, expanding=True))
 
             with get_session(self.db_alias) as session:
-                print(session.bind)
                 df = pd.read_sql(stmt, session.bind, params=self.params)
             return df
         except SQLAlchemyError as e:

@@ -50,7 +50,7 @@ class StagingIntegradorComercial:
     }
 
     COLUMNS_STR = [
-        'codcli',
+        'cod_cliente',
         'nom_cliente',
         'cif',
         'cod_articulo',

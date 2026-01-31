@@ -149,8 +149,6 @@ class DWBatchedLoader(BaseEstimator, TransformerMixin):
             self.logger.error("Error en inserción SQLAlchemy (proceso por batches): %s", e.__class__.__name__)
             self.logger.error("Mensaje: %s", e)
             raise
-
-        print("Finalizó Proceso de Carga al DataWarehouse (por batches).")
         return X
 
 
@@ -244,6 +242,4 @@ class DWBatchedUpdater:
             self.logger.error("Error en actualización SQLAlchemy: %s", e.__class__.__name__)
             self.logger.error("Mensaje: %s", e)
             raise
-
-        print("Finalizó proceso de actualización en DataWarehouse.")
         return X

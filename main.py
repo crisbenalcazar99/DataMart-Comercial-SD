@@ -48,8 +48,6 @@ if __name__ == "__main__":
 
     # # ----------------- OPERATIVIDAD ------------------------
     df_general = StagingIntegradorOperatividad.run(RunMode.INCREMENTAL)
-    print('DF GEBERAL LENGTH')
-    df_general.info()
     UsersPipeline(run_mode=RunMode.INCREMENTAL).run(df_general)
     RucsPipeline().run(df_general)  # Pipeline Proceso de Carga de RUCS
     df_transacciones_operatividad = TransactionHistoryPipeline(RunMode.INCREMENTAL).run(df_general)
@@ -58,7 +56,6 @@ if __name__ == "__main__":
 
     # ---------------- COMERCIAL ------------------------
     # df_general = StagingIntegradorComercial.run()
-    # print(df_general.info())
     # ClientesPipeline().run(df_general)
     # FacturasComercialPipeline().run(df_general)
     # TransactionDetailsPipeline().run(df_general)

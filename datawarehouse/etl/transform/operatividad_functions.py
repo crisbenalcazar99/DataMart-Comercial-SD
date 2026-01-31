@@ -189,9 +189,6 @@ class FetchAndAttachIdMultipleColumns(BaseEstimator, TransformerMixin):
 
         # 3) Eliminamos las columnas de lookup originales
         X.drop(columns=self.lookup_columns, inplace=True)
-
-        X.info()
-
         return X
 
 

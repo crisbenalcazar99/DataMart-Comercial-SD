@@ -4,6 +4,19 @@ import logging
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 
+from datawarehouse.models.zoho.dim_localidades import DimLocalidadesEntity
+from datawarehouse.models.zoho.dim_rucs import DimRucsEntity
+from datawarehouse.models.zoho.dim_usuarios import DimUsuariosEntity
+from datawarehouse.models.zoho.fact_transacciones_operatividad import FactTransaccionesOperatividadEntity
+from datawarehouse.models.zoho.fact_servicios_activos import FactServiciosActivosEntity
+
+from datawarehouse.models.catalogos import CatalogosEntity
+from datawarehouse.models.Comercial.dim_clientes_entity import DimClientesEntity
+from datawarehouse.models.Comercial.dim_articulos_entity import DimArticulosEntity
+from datawarehouse.models.Comercial.dim_vendedores_entity import DimVendedoresEntity
+from datawarehouse.models.Comercial.fact_facturas_entity import FactFacturasEntity
+from datawarehouse.models.Comercial.fact_detalle_transacciones_entity import FactDetalleTransaccionesEntity
+
 from datawarehouse.pipelines.Zoho.actualizacion_emision_pipeline import UpdateTrasactionHistoryPipeline
 from datawarehouse.pipelines.Zoho.dim_users_pipeline import UsersPipeline
 from datawarehouse.pipelines.Zoho.dim_rucs_pipeline import RucsPipeline
@@ -86,7 +99,7 @@ default_args = {
 with DAG(
         dag_id="dag_operatividad_incremental",
         description="DAG Actualizacion Incremental Informacion de Operatividad Zoho",
-        start_date=datetime(2025, 11, 21),
+        start_date=datetime(2025, 11, 21, tzinfo=local_tz),
         schedule="30 7,10,13,16 * * *",
         catchup=False,
         tags=["operatividad", "ZOHO", "CAMUNDA", "QUANTA", "Incremental"],
@@ -119,7 +132,7 @@ with DAG(
     )
 
     task_run_update_history = PythonOperator(
-        task_id="Update Expiration-Emision Date",
+        task_id="update_expiration_emision_date",
         python_callable=run_update_history,
     )
 

@@ -52,7 +52,6 @@ def preload_reasignaciones():
         df_reasignaciones.at[index, 'id_cliente'] = id_cliente
     df_reasignaciones.drop(columns=['ruc', 'vendedor'], inplace=True)
     df_reasignaciones['id_cliente'] = df_reasignaciones['id_cliente'].astype('Int64')
-    df_reasignaciones.info()
     dwloader = DWLoader("LOCAL", ReasignacionesEntity)
 
     dwloader.fit_transform(df_reasignaciones)
