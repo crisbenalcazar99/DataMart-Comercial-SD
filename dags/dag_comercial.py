@@ -75,7 +75,7 @@ with DAG(
         dag_id="dag_comercial_zoho",
         description="DAG Comercial ZOHO",
         start_date=datetime(2026, 1, 28, tzinfo=local_tz),
-        schedule="30 7,10,13,16 * * *",
+        schedule="25 7,10,13,16 * * *",
         catchup=False,
         tags=["comercial", "ZOHO", "QUANTA", "FENIX"],
         default_args=default_args,

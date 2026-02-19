@@ -100,7 +100,7 @@ with DAG(
         dag_id="dag_operatividad_incremental",
         description="DAG Actualizacion Incremental Informacion de Operatividad Zoho",
         start_date=datetime(2025, 11, 21, tzinfo=local_tz),
-        schedule="30 7,10,13,16 * * *",
+        schedule="25 7,10,13,16 * * *",
         catchup=False,
         tags=["operatividad", "ZOHO", "CAMUNDA", "QUANTA", "Incremental"],
         default_args=default_args,

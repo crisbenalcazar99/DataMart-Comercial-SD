@@ -1,6 +1,6 @@
 SELECT 
 	 CASE WHEN fs.fecha_emision = '' THEN NULL ELSE fs.fecha_emision::TIMESTAMP WITHOUT TIME ZONE END AS fecha_emision,
-	 fs.fecha_expiracion::TIMESTAMP WITHOUT TIME ZONE AS fecha_caducidad,
+	 CASE WHEN fs.fecha_expiracion = '' THEN NULL ELSE fs.fecha_expiracion::TIMESTAMP WITHOUT TIME ZONE END AS fecha_caducidad,
 	 t.id_tramite,
 	 fs.serial_firma
 	 
