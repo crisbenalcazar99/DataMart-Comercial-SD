@@ -167,7 +167,7 @@ stg_fact_subtotal AS (
 stg_fact_iva_articulo AS (
     SELECT
         *,
-        sfs_0.subtotal_articulo * sfs_0.porcentaje_iva AS total_iva
+        sfs_0.subtotal_articulo * sfs_0.porcentaje_iva / 100 AS total_iva
     FROM stg_fact_subtotal sfs_0
 
 )
