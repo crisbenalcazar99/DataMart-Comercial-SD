@@ -99,5 +99,7 @@ with DAG(
         task_id="load_transactions",
         python_callable=run_transaction,
     )
-
+    # -------------------------
+    # DEPENDENCIAS
+    # -------------------------
     task_staging >> task_clients >> task_facturas >> task_transactions
