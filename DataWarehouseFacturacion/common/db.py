@@ -2,8 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
-from common.connection import build_connection_url
-from config.setting import get_db_config
+from DataWarehouseFacturacion.common.connection import build_connection_url
+from DataWarehouseFacturacion.config.setting import get_db_config
 
 # Configuracion para las Bases de Datos
 DB_CONFIG_PORTAL = get_db_config("PORTAL")

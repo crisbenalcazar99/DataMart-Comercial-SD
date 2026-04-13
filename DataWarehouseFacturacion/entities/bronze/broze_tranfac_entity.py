@@ -1,5 +1,5 @@
-from models.base import Base
-from models.base_model import BaseModel
+from DataWarehouseFacturacion.models.base import Base
+from DataWarehouseFacturacion.models.base_model import BaseModel
 from sqlalchemy.orm import Session
 
 from sqlalchemy import Column, Integer, String, DateTime, func, BigInteger, Numeric

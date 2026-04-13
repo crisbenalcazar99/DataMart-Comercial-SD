@@ -1,5 +1,5 @@
-from common.db import engine
-from models.base import Base
+from DataWarehouseFacturacion.common.db import engine
+from DataWarehouseFacturacion.models.base import Base
 
 
 # common/schema_initializer.py

@@ -1,6 +1,6 @@
 import yaml
 
-from utils.RunMode import RunMode
+from DataWarehouseFacturacion.utils.RunMode import RunMode
 
 
 class PipelineGlobalConfig:

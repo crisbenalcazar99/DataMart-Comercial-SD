@@ -2,7 +2,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sklearn.base import BaseEstimator, TransformerMixin
 from sqlalchemy import text, bindparam
 import pandas as pd
-from common.session_manager import get_session
+from DataWarehouseFacturacion.common.session_manager import get_session
 import logging
 
 

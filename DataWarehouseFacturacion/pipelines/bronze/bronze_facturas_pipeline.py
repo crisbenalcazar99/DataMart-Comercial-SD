@@ -1,16 +1,16 @@
 from typing import Optional, Type, List, Dict
 
-from common.session_manager import get_session
-from config.app_config import AppConfig
-from config.logging_pipeline import LoggingPipeline
-from entities.bronze.broze_facturas_entity import BronzeFacturaEntity
-from etl.extract.db_extractor import DatabaseExtractor
-from etl.load.db_load import DWBatchedLoader
-from etl.transform.general_functions import CleanSpecialCharacters
-from utils.RunMode import RunMode
-from utils.general_functions import load_sql_statement
-from utils.mode_persistence import ModePersistence
-from utils.source_spec import SourceSpec
+from DataWarehouseFacturacion.common.session_manager import get_session
+from DataWarehouseFacturacion.config.app_config import AppConfig
+from DataWarehouseFacturacion.config.logging_pipeline import LoggingPipeline
+from DataWarehouseFacturacion.entities.bronze.broze_facturas_entity import BronzeFacturaEntity
+from DataWarehouseFacturacion.etl.extract.db_extractor import DatabaseExtractor
+from DataWarehouseFacturacion.etl.load.db_load import DWBatchedLoader
+from DataWarehouseFacturacion.etl.transform.general_functions import CleanSpecialCharacters
+from DataWarehouseFacturacion.utils.RunMode import RunMode
+from DataWarehouseFacturacion.utils.general_functions import load_sql_statement
+from DataWarehouseFacturacion.utils.mode_persistence import ModePersistence
+from DataWarehouseFacturacion.utils.source_spec import SourceSpec
 
 
 class DatabaseConfig:

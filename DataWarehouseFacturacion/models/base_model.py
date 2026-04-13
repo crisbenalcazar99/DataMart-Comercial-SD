@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 import pandas as pd
 from sqlalchemy.dialects.postgresql import insert
 
-from utils.mode_persistence import ModePersistence
+from DataWarehouseFacturacion.utils.mode_persistence import ModePersistence
 
 
 class BaseModel:

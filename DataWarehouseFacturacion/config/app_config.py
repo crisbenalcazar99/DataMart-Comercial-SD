@@ -1,6 +1,6 @@
 from typing import Literal
 
-from utils.RunMode import RunMode
+from DataWarehouseFacturacion.utils.RunMode import RunMode
 
 
 class AppConfig:

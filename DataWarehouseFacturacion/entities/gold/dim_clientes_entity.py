@@ -1,8 +1,8 @@
 from sqlalchemy import Column, String, DateTime, func, BigInteger
 from sqlalchemy.dialects.postgresql import UUID
 
-from models.base import Base
-from models.base_model import BaseModel
+from DataWarehouseFacturacion.models.base import Base
+from DataWarehouseFacturacion.models.base_model import BaseModel
 
 
 class DimClientesEntity(Base, BaseModel):

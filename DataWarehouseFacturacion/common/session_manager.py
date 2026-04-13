@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from common.db import SessionPortal, SessionFenix, SessionCamunda, SessionQuanta, SessionLatinum, SessionLocal, \
+from DataWarehouseFacturacion.common.db import SessionPortal, SessionFenix, SessionCamunda, SessionQuanta, SessionLatinum, SessionLocal, \
     SessionPortalGk
 
 

@@ -5,8 +5,8 @@ import logging
 
 from sqlalchemy import update, bindparam, func
 
-from common.session_manager import get_session
-from utils.mode_persistence import ModePersistence
+from DataWarehouseFacturacion.common.session_manager import get_session
+from DataWarehouseFacturacion.utils.mode_persistence import ModePersistence
 
 
 class DWLoader(BaseEstimator, TransformerMixin):
